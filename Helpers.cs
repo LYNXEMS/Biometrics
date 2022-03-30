@@ -62,7 +62,7 @@ namespace Biometrics
             {
                 int theWidth = bitmap.Width;
                 int theHeight = bitmap.Height;
-                Bitmap bitmap2 = new Bitmap(width, height);
+                Bitmap bitmap2 = new Bitmap(theWidth, theHeight);
                 
                 for (int x = 0; x < theWidth; x++)
                 {

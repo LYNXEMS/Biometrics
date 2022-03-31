@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Drawing;
 
 namespace Biometrics
 {
@@ -26,7 +21,7 @@ namespace Biometrics
 
         public Image(string file)
         {
-            image = Helpers.CreateNonIndexedImage(System.Drawing.Image.FromFile("your image.tif"));
+            image = Helpers.CreateNonIndexedImage(System.Drawing.Image.FromFile(file));
             ResolutionX = image.Height;
             ResolutionY = image.Width;
 

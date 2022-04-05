@@ -65,11 +65,10 @@ namespace Biometrics
 
         public static Bitmap Boolean2Bitmap(bool[][] array2D)
         {
-            Bitmap b = new Bitmap(array2D[0].Length, array2D.Length);
+            Bitmap b = new Bitmap(array2D.Length, array2D[0].Length);
             using (Graphics graphics = Graphics.FromImage(b)) graphics.Clear(White);
             for (int x = 0; x < b.Width; x++)
             {
-                array2D[x] = new bool[b.Height];
                 for (int y = 0; y < b.Height; y++)
                     if (array2D[x][y]) b.SetPixel(x, y, Black);
             }
@@ -113,14 +112,14 @@ namespace Biometrics
         private static int numberOfWhiteNeigbours(int x, int y, bool[][] array2D)
         {
             int count = 0;
-            if (array2D[x - 1][y]) count++;
-            if (array2D[x - 1][y + 1]) count++;
-            if (array2D[x - 1][y - 1]) count++;
-            if (array2D[x][y - 1]) count++;
+            if (array2D[x][y]) count++;//error here x-1
+            if (array2D[x][y + 1]) count++;//error here x-1
+            if (array2D[x][y]) count++;//error here x-1 y-1
+            if (array2D[x][y]) count++;//error here y-1
             if (array2D[x][y + 1]) count++;
             if (array2D[x + 1][y + 1]) count++;
             if (array2D[x + 1][y]) count++;
-            if (array2D[x + 1][y - 1]) count++;
+            if (array2D[x + 1][y]) count++;//error here y-1
             return count;
         }
         private static int numberOfZeroToOneTransitionFromPixel9(int x, int y, bool[][] array2D)
@@ -142,10 +141,10 @@ namespace Biometrics
         }
         private static bool ZhangSuenThinningAlgorithm(int x, int y, bool[][] array2D, bool even)
         {
-            bool p2 = array2D[x][y - 1];
+            bool p2 = array2D[x][y];//error here y-1
             bool p4 = array2D[x + 1][y];
             bool p6 = array2D[x][y + 1];
-            bool p8 = array2D[x - 1][y];
+            bool p8 = array2D[x][y];//error here x-1
 
             int bp1 = numberOfWhiteNeigbours(x, y, array2D);
             if (bp1 >= 2 && bp1 <= 6)
@@ -190,6 +189,7 @@ namespace Biometrics
                 tmp = ArrayClone(array2D);
                 count += step(2, tmp, array2D);
                 tmp = ArrayClone(array2D);
+                System.Console.WriteLine("Line 193");//inside infinite loop
             }
             while (count > 0);
             return array2D;

@@ -50,6 +50,32 @@ namespace Biometrics
             return newBmp;
         }
 
+        public static bool[][] Bitmap2Boolean(Image image)
+        {
+            Bitmap b = image.image;
+            bool[][] array2D = new bool[b.Width][];
+            for (int x = 0; x < b.Width; x++)
+            {
+                array2D[x] = new bool[b.Height];
+                for (int y = 0; y < b.Height; y++)
+                    array2D[x][y] = b.GetPixel(x, y).GetBrightness() < 0.3;
+            }
+            return array2D;
+        }
+
+        public static Bitmap Boolean2Bitmap(bool[][] array2D)
+        {
+            Bitmap b = new Bitmap(array2D[0].Length, array2D.Length);
+            using (Graphics graphics = Graphics.FromImage(b)) graphics.Clear(White);
+            for (int x = 0; x < b.Width; x++)
+            {
+                array2D[x] = new bool[b.Height];
+                for (int y = 0; y < b.Height; y++)
+                    if (array2D[x][y]) b.SetPixel(x, y, Black);
+            }
+            return (Bitmap)b;
+        }
+
         public static Bitmap mixTwoBitmaps(Bitmap bitmap, Bitmap bitmap1)
         {
             if (bitmap.Width != bitmap1.Width || bitmap.Height != bitmap1.Height)
@@ -84,116 +110,89 @@ namespace Biometrics
             else return 8;
         }
 
-        public static int numberOfColorNeigbours(int pixelX, int pixelY, Image image, Color color)
+        private static int numberOfWhiteNeigbours(int x, int y, bool[][] array2D)
         {
-            Bitmap b = image.image;
-            ArrayList pixels = new ArrayList();
             int count = 0;
-            if (numberOfNeighbours(pixelX, pixelY, image) == 3)
-            {
-                if (pixelX == 0 && pixelY == 0)
-                {
-                    pixels.Add(b.GetPixel(pixelX + 1, pixelY));
-                    pixels.Add(b.GetPixel(pixelX + 1, pixelY + 1));
-                    pixels.Add(b.GetPixel(pixelX, pixelY + 1));
-                    foreach (Color pixel in pixels)
-                        if (pixel == color)
-                            count++;
-                    pixels.Clear();
-                }
-                else if (pixelX == b.Width - 1 && pixelY == 0)
-                {
-                    pixels.Add(b.GetPixel(pixelX - 1, pixelY));
-                    pixels.Add(b.GetPixel(pixelX - 1, pixelY + 1));
-                    pixels.Add(b.GetPixel(pixelX, pixelY + 1));
-                    foreach (Color pixel in pixels)
-                        if (pixel == color)
-                            count++;
-                    pixels.Clear();
-                }
-                else if (pixelX == 0 && pixelY == b.Height - 1)
-                {
-                    pixels.Add(b.GetPixel(pixelX + 1, pixelY));
-                    pixels.Add(b.GetPixel(pixelX + 1, pixelY - 1));
-                    pixels.Add(b.GetPixel(pixelX, pixelY - 1));
-                    foreach (Color pixel in pixels)
-                        if (pixel == color)
-                            count++;
-                    pixels.Clear();
-                }
-                else//(pixelX == b.Width - 1 && pixelY == b.Height - 1)
-                {
-                    pixels.Add(b.GetPixel(pixelX - 1, pixelY));
-                    pixels.Add(b.GetPixel(pixelX - 1, pixelY - 1));
-                    pixels.Add(b.GetPixel(pixelX, pixelY - 1));
-                    foreach (Color pixel in pixels)
-                        if (pixel == color)
-                            count++;
-                    pixels.Clear();
-                }
-            }
-            else if (numberOfNeighbours(pixelX, pixelY, image) == 5)
-            {
-                if (pixelX > 0 && pixelX < b.Width && pixelY == 0)
-                {
-                    pixels.Add(b.GetPixel(pixelX - 1, pixelY));
-                    pixels.Add(b.GetPixel(pixelX + 1, pixelY));
-                    pixels.Add(b.GetPixel(pixelX - 1, pixelY + 1));
-                    pixels.Add(b.GetPixel(pixelX + 1, pixelY + 1));
-                    pixels.Add(b.GetPixel(pixelX, pixelY + 1));
-                    foreach (Color pixel in pixels)
-                        if (pixel == color)
-                            count++;
-                    pixels.Clear();
-                }
-                else if (pixelX == 0 && pixelY > 0 && pixelY < b.Height)
-                {
-                    pixels.Add(b.GetPixel(pixelX, pixelY - 1));
-                    pixels.Add(b.GetPixel(pixelX, pixelY + 1));
-                    pixels.Add(b.GetPixel(pixelX + 1, pixelY - 1));
-                    pixels.Add(b.GetPixel(pixelX + 1, pixelY + 1));
-                    pixels.Add(b.GetPixel(pixelX + 1, pixelY));
+            if (array2D[x - 1][y]) count++;
+            if (array2D[x - 1][y + 1]) count++;
+            if (array2D[x - 1][y - 1]) count++;
+            if (array2D[x][y - 1]) count++;
+            if (array2D[x][y + 1]) count++;
+            if (array2D[x + 1][y + 1]) count++;
+            if (array2D[x + 1][y]) count++;
+            if (array2D[x + 1][y - 1]) count++;
+            return count;
+        }
+        private static int numberOfZeroToOneTransitionFromPixel9(int x, int y, bool[][] array2D)
+        {
+            bool p2 = array2D[x][y - 1];
+            bool p3 = array2D[x + 1][y - 1];
+            bool p4 = array2D[x + 1][y];
+            bool p5 = array2D[x + 1][y + 1];
+            bool p6 = array2D[x][y + 1];
+            bool p7 = array2D[x - 1][y + 1];
+            bool p8 = array2D[x - 1][y];
+            bool p9 = array2D[x - 1][y - 1];
 
-                    foreach (Color pixel in pixels)
-                        if (pixel == color)
-                            count++;
-                    pixels.Clear();
-                }
-                else if (pixelX > 0 && pixelX < b.Width && pixelY == b.Height - 1)
-                {
+            int finale = Convert.ToInt32((!p2 && p3)) + Convert.ToInt32((!p3 && p4)) +
+                Convert.ToInt32((!p4 && p6)) + Convert.ToInt32((!p5 && p6)) +
+                Convert.ToInt32((!p6 && p7)) + Convert.ToInt32((!p7 && p8)) +
+                Convert.ToInt32((!p8 && p9)) + Convert.ToInt32((!p9 && p2));
+            return finale;
+        }
+        private static bool ZhangSuenThinningAlgorithm(int x, int y, bool[][] array2D, bool even)
+        {
+            bool p2 = array2D[x][y - 1];
+            bool p4 = array2D[x + 1][y];
+            bool p6 = array2D[x][y + 1];
+            bool p8 = array2D[x - 1][y];
 
-                }
-                else //(pixelX == b.Width - 1 && pixelY > 0 && pixelY < b.Height)
-                {
-                }
-            }
-            else
+            int bp1 = numberOfWhiteNeigbours(x, y, array2D);
+            if (bp1 >= 2 && bp1 <= 6)
             {
-                pixels.Add(b.GetPixel(pixelX, pixelY));
-                pixels.Add(b.GetPixel(pixelX - 1, pixelY));
-                pixels.Add(b.GetPixel(pixelX + 1, pixelY));
-                pixels.Add(b.GetPixel(pixelX, pixelY + 1));
-                pixels.Add(b.GetPixel(pixelX, pixelY - 1));
-                pixels.Add(b.GetPixel(pixelX - 1, pixelY + 1));
-                pixels.Add(b.GetPixel(pixelX + 1, pixelY + 1));
-                pixels.Add(b.GetPixel(pixelX - 1, pixelY - 1));
-                pixels.Add(b.GetPixel(pixelX + 1, pixelY - 1));
-                foreach (Color pixel in pixels)
-                    if (pixel == color)
-                        count++;
-                pixels.Clear();
+                if (numberOfZeroToOneTransitionFromPixel9(x, y, array2D) == 1)
+                    if (even)
+                        if (!((p2 && p4) && p8))
+                            if (!((p2 && p6) && p8))
+                                return true;
+                            else
+                            {
+                                if (!((p2 && p4) && p6))
+                                    if (!((p4 && p6) && p8))
+                                        return true;
+                            }
+            }
+            return false;
+        }
+
+        private static int step(int stepNumber, bool[][] tmp, bool[][] array2D)
+        {
+            int count = 0;
+            for (int i = 0; i < tmp.Length - 1; i++)
+            {
+                for (int j = 0; j < tmp[0].Length - 1; j++)
+                    if (ZhangSuenThinningAlgorithm(i, j, tmp, stepNumber == 2))
+                        if (array2D[i][j]) count++;
+                        else array2D[i][j] = false;
             }
             return count;
         }
 
-        public static int numberOfWhiteNeighbours(int pixelX, int pixelY, Image image)
-        {
-            return numberOfColorNeigbours(pixelX, pixelY, image, White);
-        }
+        public static T[][] ArrayClone<T>(T[][] array) => array.Select(i => i.ToArray()).ToArray();
 
-        public static int numberOfBlackNeighbours(int pixelX, int pixelY, Image image)
+        public static bool[][] ZhangSuenThinning(bool[][] array2D)
         {
-            return numberOfColorNeigbours(pixelX, pixelY, image, Black);
+            bool[][] tmp = ArrayClone(array2D);
+            int count = 0;
+            do
+            {
+                count = step(1, tmp, array2D);
+                tmp = ArrayClone(array2D);
+                count += step(2, tmp, array2D);
+                tmp = ArrayClone(array2D);
+            }
+            while (count > 0);
+            return array2D;
         }
 
         public static Color substract(Color c, Color c1) => Color.FromArgb(Math.Abs(c.R - c1.R), Math.Abs(c.G - c1.G), Math.Abs(c.B - c1.B));

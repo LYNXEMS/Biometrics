@@ -33,6 +33,30 @@ namespace Biometrics
             return targetBitmap;
         }
 
+        public static Bitmap mixTwoBitmaps(Bitmap bitmap, Bitmap bitmap1)
+        {
+            if (bitmap.Width != bitmap1.Width || bitmap.Height != bitmap1.Height)
+                return null;
+            else
+            {
+                int theWidth = bitmap.Width;
+                int theHeight = bitmap.Height;
+                Bitmap bitmap2 = new Bitmap(theWidth, theHeight);
+
+                for (int x = 0; x < theWidth; x++)
+                {
+                    for (int y = 0; y < theHeight; y++)
+                    {
+                        int R = (int)(0.5f * bitmap.GetPixel(x, y).R + 0.5f * bitmap1.GetPixel(x, y).R);
+                        int G = (int)(0.5f * bitmap.GetPixel(x, y).G + 0.5f * bitmap1.GetPixel(x, y).G);
+                        int B = (int)(0.5f * bitmap.GetPixel(x, y).B + 0.5f * bitmap1.GetPixel(x, y).B);
+                        Color color = Color.FromArgb(0, R, G, B);
+                        bitmap2.SetPixel(x, y, color);
+                    }
+                }
+                return bitmap2;
+            }
+        }
         public static bool[][] Image2Bool(Image img)
         {
             Bitmap bmp = new Bitmap(img);

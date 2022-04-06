@@ -189,5 +189,54 @@ namespace Biometrics
             if (s[x + 1][y - 1]) count++;
             return count;
         }
+
+
+        private static int checkThisPoint(Bitmap bitmap, int x, int y)
+        {
+            int count = 0;
+            for (int i = x - 1; i < x + 2; i++)
+            {
+                for (int j = y - 1; j < y + 2; j++)
+                    if (bitmap.GetPixel(i, j) == Color.Black)
+                        count++;
+            }
+            return count - 1;
+        }
+        public static List<List<int>> findCheckPoint(Bitmap bitmap)
+        {
+            int x = bitmap.Width;
+            int y = bitmap.Height;
+            List<int> branchPointX = new List<int>();
+            List<int> branchPointY = new List<int>();
+            List<int> endPointX = new List<int>();
+            List<int> endPointY = new List<int>();
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    int t;
+                    if (bitmap.GetPixel(i, j) == Color.Black)
+                    {
+                        t = checkThisPoint(bitmap, i, j);
+                        if (t <= 1)
+                        {
+                            endPointX.Add(i);
+                            endPointY.Add(j);
+                        }
+                        if (t == 3)
+                        {
+                            branchPointX.Add(i);
+                            branchPointY.Add(j);
+                        }
+                    }
+                }
+            }
+            List<List<int>> r = new List<List<int>>();
+            r.Add(endPointX);
+            r.Add(endPointY);
+            r.Add(branchPointX);
+            r.Add(branchPointY);
+            return r;
+        }
     }
 }

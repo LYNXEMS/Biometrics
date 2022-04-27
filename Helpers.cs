@@ -1,5 +1,7 @@
 ﻿using System.Drawing;
 using System.Collections;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 namespace Biometrics
 {
@@ -57,186 +59,32 @@ namespace Biometrics
                 return bitmap2;
             }
         }
-        public static bool[][] Image2Bool(Image img)
+
+        public static bool[,] Image2Bool(Image img)
         {
             Bitmap bmp = new Bitmap(img);
-            bool[][] s = new bool[bmp.Height][];
+            bool[,] s = new bool[bmp.Height,bmp.Width];
             for (int y = 0; y < bmp.Height; y++)
             {
-                s[y] = new bool[bmp.Width];
                 for (int x = 0; x < bmp.Width; x++)
-                    s[y][x] = bmp.GetPixel(x, y).GetBrightness() < 0.3;
+                    s[y,x] = bmp.GetPixel(x, y).GetBrightness() < 0.3;
             }
             return s;
 
         }
 
-        public static Image Bool2Image(bool[][] s)
+        public static Image Bool2Image(bool[,] s)
         {
-            Bitmap bmp = new Bitmap(s[0].Length, s.Length);
+            Bitmap bmp = new Bitmap(s.GetLength(1), s.GetLength(0));
             using (Graphics g = Graphics.FromImage(bmp)) g.Clear(Color.White);
             for (int y = 0; y < bmp.Height; y++)
                 for (int x = 0; x < bmp.Width; x++)
-                    if (s[y][x]) bmp.SetPixel(x, y, Color.Black);
+                    if (s[y,x]) bmp.SetPixel(x, y, Color.Black);
 
             return (Bitmap)bmp;
         }
+
         public static T[][] ArrayClone<T>(T[][] A)
         { return A.Select(a => a.ToArray()).ToArray(); }
-
-        public static bool[][] ZhangSuenThinning(bool[][] s)
-        {
-            bool[][] temp = ArrayClone(s);
-            int count = 0;
-            do
-            {
-                count = step(1, temp, s);
-                temp = ArrayClone(s);
-                count += step(2, temp, s);
-                temp = ArrayClone(s);
-            }
-            while (count > 0);
-            return s;
-        }
-
-        static int step(int stepNo, bool[][] temp, bool[][] s)
-        {
-            int count = 0;
-
-            for (int a = 1; a < temp.Length - 1; a++)
-            {
-                for (int b = 1; b < temp[0].Length - 1; b++)
-                {
-                    if (SuenThinningAlg(a, b, temp, stepNo == 2))
-                    {
-                        if (s[a][b]) count++;
-                        s[a][b] = false;
-                    }
-                }
-            }
-            return count;
-        }
-
-        static bool SuenThinningAlg(int x, int y, bool[][] s, bool even)
-        {
-            bool p2 = s[x][y - 1];
-            bool p3 = s[x + 1][y - 1];
-            bool p4 = s[x + 1][y];
-            bool p5 = s[x + 1][y + 1];
-            bool p6 = s[x][y + 1];
-            bool p7 = s[x - 1][y + 1];
-            bool p8 = s[x - 1][y];
-            bool p9 = s[x - 1][y - 1];
-
-
-            int bp1 = NumberOfNonZeroNeighbors(x, y, s);
-            if (bp1 >= 2 && bp1 <= 6)
-            {
-                if (NumberOfZeroToOneTransitionFromP9(x, y, s) == 1)
-                {
-                    if (even)
-                    {
-                        if (!((p2 && p4) && p8))
-                        {
-                            if (!((p2 && p6) && p8))
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (!((p2 && p4) && p6))
-                        {
-                            if (!((p4 && p6) && p8))
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
-        static int NumberOfZeroToOneTransitionFromP9(int x, int y, bool[][] s)
-        {
-            bool p2 = s[x][y - 1];
-            bool p3 = s[x + 1][y - 1];
-            bool p4 = s[x + 1][y];
-            bool p5 = s[x + 1][y + 1];
-            bool p6 = s[x][y + 1];
-            bool p7 = s[x - 1][y + 1];
-            bool p8 = s[x - 1][y];
-            bool p9 = s[x - 1][y - 1];
-
-            int A = Convert.ToInt32((!p2 && p3)) + Convert.ToInt32((!p3 && p4)) +
-                    Convert.ToInt32((!p4 && p5)) + Convert.ToInt32((!p5 && p6)) +
-                    Convert.ToInt32((!p6 && p7)) + Convert.ToInt32((!p7 && p8)) +
-                    Convert.ToInt32((!p8 && p9)) + Convert.ToInt32((!p9 && p2));
-            return A;
-        }
-        static int NumberOfNonZeroNeighbors(int x, int y, bool[][] s)
-        {
-            int count = 0;
-            if (s[x - 1][y]) count++;
-            if (s[x - 1][y + 1]) count++;
-            if (s[x - 1][y - 1]) count++;
-            if (s[x][y + 1]) count++;
-            if (s[x][y - 1]) count++;
-            if (s[x + 1][y]) count++;
-            if (s[x + 1][y + 1]) count++;
-            if (s[x + 1][y - 1]) count++;
-            return count;
-        }
-
-
-        private static int checkThisPoint(Bitmap bitmap, int x, int y)
-        {
-            int count = 0;
-            for (int i = x - 1; i < x + 2; i++)
-            {
-                for (int j = y - 1; j < y + 2; j++)
-                    if (bitmap.GetPixel(i, j) == Color.Black)
-                        count++;
-            }
-            return count - 1;
-        }
-        public static List<List<int>> findCheckPoint(Bitmap bitmap)
-        {
-            int x = bitmap.Width;
-            int y = bitmap.Height;
-            List<int> branchPointX = new List<int>();
-            List<int> branchPointY = new List<int>();
-            List<int> endPointX = new List<int>();
-            List<int> endPointY = new List<int>();
-            for (int i = 0; i < x; i++)
-            {
-                for (int j = 0; j < y; j++)
-                {
-                    int t;
-                    if (bitmap.GetPixel(i, j) == Color.Black)
-                    {
-                        t = checkThisPoint(bitmap, i, j);
-                        if (t <= 1)
-                        {
-                            endPointX.Add(i);
-                            endPointY.Add(j);
-                        }
-                        if (t == 3)
-                        {
-                            branchPointX.Add(i);
-                            branchPointY.Add(j);
-                        }
-                    }
-                }
-            }
-            List<List<int>> r = new List<List<int>>();
-            r.Add(endPointX);
-            r.Add(endPointY);
-            r.Add(branchPointX);
-            r.Add(branchPointY);
-            return r;
-        }
     }
 }

@@ -8,8 +8,24 @@ namespace Biometrics
         public int ResolutionX;
         public int ResolutionY;
         public string name;
-        public Bitmap image;
-        public bool[][] binarized;
+        private Bitmap image;
+        private bool[,] binarized;
+
+        public bool[,] Binarized { get => binarized; 
+            set 
+            {
+                binarized = value;
+                image = (Bitmap)Helpers.Bool2Image(value);
+            } 
+        }
+
+        public Bitmap Image { get => image;
+            set
+            {
+                image = value;
+                binarized = Helpers.Image2Bool(value);
+            }
+        }
 
         public PrintImage(int resolutionX, int resolutionY, string name)
         {
@@ -22,18 +38,18 @@ namespace Biometrics
 
         public PrintImage(string file)
         {
-            image = Helpers.CreateNonIndexedImage(Image.FromFile(file));
-            image = Helpers.Binarization(image);
-            binarized = Helpers.Image2Bool(image);
-            ResolutionX = image.Width;
-            ResolutionY = image.Height;
+            image = (Bitmap)System.Drawing.Image.FromFile(file);
+            binarized = Helpers.Image2Bool(Image);
+            ResolutionX = Image.Width;
+            ResolutionY = Image.Height;
 
-            this.name = file;
+            name = file;
         }
 
         public PrintImage(Image img)
         {
             image = (Bitmap?)img;
+            binarized = Helpers.Image2Bool(Image);
             ResolutionX = img.Width;
             ResolutionY= img.Height;
         }
@@ -45,7 +61,7 @@ namespace Biometrics
                 named = name;
             }
 
-            image.Save(named);
+            Image.Save(named);
         }
 
         public void SaveImageBinarized(string named = "")
@@ -54,7 +70,7 @@ namespace Biometrics
             {
                 named = name;
             }
-            var toSave = Helpers.Bool2Image(binarized);
+            var toSave = Helpers.Bool2Image(Binarized);
             toSave.Save(named);
         }
     }

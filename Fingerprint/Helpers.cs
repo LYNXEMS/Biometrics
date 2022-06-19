@@ -83,4 +83,16 @@ public static class Helpers
 
     public static T[][] ArrayClone<T>(T[][] A)
     { return A.Select(a => a.ToArray()).ToArray(); }
+
+    public static IEnumerable<Point> GetNeighbours(bool[,] bitmap, int x, int y)
+    {
+        if (bitmap[x + 1, y]) yield return new Point(x + 1, y);
+        if (bitmap[x + 1, y - 1]) yield return new Point(x + 1, y - 1);
+        if (bitmap[x, y - 1]) yield return new Point(x, y - 1);
+        if (bitmap[x - 1, y - 1]) yield return new Point(x - 1, y - 1);
+        if (bitmap[x - 1, y]) yield return new Point(x - 1, y);
+        if (bitmap[x - 1, y + 1]) yield return new Point(x - 1, y + 1);
+        if (bitmap[x, y + 1]) yield return new Point(x, y + 1);
+        if (bitmap[x + 1, y + 1]) yield return new Point(x + 1, y + 1);
+    }
 }

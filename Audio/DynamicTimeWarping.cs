@@ -2,6 +2,9 @@
 
 public static class DynamicTimeWarping
 {
+    public static double Distance(IEnumerable<int> first, IEnumerable<int> second)
+        => Distance(first.Select(x => (double)x).ToArray(), second.Select(x => (double)x).ToArray());
+    
     public static double Distance(IEnumerable<double[]> first, IEnumerable<double[]> second)
         => Distance(first.SelectMany(x => x).ToArray(), second.SelectMany(x => x).ToArray());
 
